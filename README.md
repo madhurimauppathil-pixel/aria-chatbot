@@ -45,7 +45,12 @@
 - **No backend required** — runs entirely in the browser
 
 ---
+🎯 Project Purpose
+This project was built as part of a web development and AI integration assignment. The goal was to design and deploy a production-ready AI chatbot that goes beyond basic retrieval-based systems — using a generative language model with real-time streaming, intent detection, and commercial-grade UI.
 
+👩‍💻 Author
+Madhurima Uppathil
+GitHub: @madhurimauppathil-pixel
 
 
 
