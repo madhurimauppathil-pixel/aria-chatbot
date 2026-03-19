@@ -676,16 +676,9 @@ textarea#wi::placeholder{color:var(--ink5)}
         </div>
         <div class="ifoot">
           <div class="imodel">Model: <select id="msel"><option value="gemini-1.5-flash">gemini-1.5-flash (Free)</option><option value="gemini-2.0-flash">gemini-2.0-flash (Free)</option></select></div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div class="isc"><kbd>↵</kbd> send &nbsp;<kbd>⇧↵</kbd> newline</div>
-            <span id="apiLink" onclick="toggleKey()" style="font-size:10.5px;color:var(--ink5);cursor:pointer;text-decoration:underline;text-underline-offset:2px;" onmouseover="this.style.color='var(--teal)'" onmouseout="this.style.color='var(--ink5)'">Connect Gemini key</span>
-          </div>
+<div class="isc"><kbd>↵</kbd> send &nbsp;<kbd>⇧↵</kbd> newline</div>
         </div>
-        <div id="keyRow" style="display:none;border-top:1px solid var(--border);padding:8px 16px;align-items:center;gap:8px;">
-          <input type="password" id="keyInput" placeholder="AIza..." onkeydown="if(event.key==='Enter')saveKey()" style="flex:1;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;font-family:var(--sans);font-size:12px;color:var(--ink);outline:none;caret-color:var(--teal);">
-          <button onclick="saveKey()" style="padding:6px 14px;background:var(--ink);color:#fff;border:none;border-radius:6px;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;">Save</button>
-          <button onclick="document.getElementById('keyRow').style.display='none'" style="background:none;border:none;color:var(--ink4);cursor:pointer;font-size:17px;line-height:1;">&times;</button>
-        </div>
+
       </div>
     </div>
   </main>
@@ -818,42 +811,10 @@ async function send(){
   var aiW=addAI();
   var bub=document.getElementById('aib');
   var cont=document.getElementById('msgs');
-  var t0=Date.now(); var full='';
+  var t0=Date.now();
+  var full=demo(text,k);
 
-  if(apiKey){
-    try{
-      var model=document.getElementById('msel').value;
-      var model=document.getElementById('msel').value;
-      var r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'Authorization':'Bearer '+apiKey,
-
-        },
-        body:JSON.stringify({model:model,messages:groqMsgs,max_tokens:1000})
-      });
-      if(!r.ok){var e=await r.text();throw new Error('HTTP '+r.status+': '+e);}
-      var data=await r.json();
-      full=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content||'';
-      bub.innerHTML=fmt(full);
-      cont.scrollTop=cont.scrollHeight;
-    }catch(e){
-      console.error('API error:',e);
-      full=demo(text,k);
-      // show error in bubble for debugging
-      bub.innerHTML='<span style="color:red;font-size:12px;">Error: '+e.message+' — Check your Groq key</span>';
-    }
-  } else {
-    full=demo(text,k);
-  }
-
-  hist.push({role:'assistant',content:full});
-  var lat=Date.now()-t0;
-  var fb=isFB(full);if(fb)fc++;
-
-  // typing effect
-  var formatted=fmt(full);
+  // typing effect — words appear one by one like real AI
   var words=full.split(' ');
   var i=0;
   bub.innerHTML='';
@@ -867,9 +828,12 @@ async function send(){
         clearInterval(timer);
         resolve();
       }
-    },35);
+    },40);
   });
 
+  hist.push({role:'assistant',content:full});
+  var lat=Date.now()-t0;
+  var fb=isFB(full);if(fb)fc++;
   finalize(aiW,full,lat,k,fb);
   busy=false;
   document.getElementById('sbtn').disabled=false;
