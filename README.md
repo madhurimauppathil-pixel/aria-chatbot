@@ -11,7 +11,7 @@
 
 ## Live Demo
 
-🔗 **[View Live → https://YOUR-USERNAME.github.io/aria-chatbot](https://YOUR-USERNAME.github.io/aria-chatbot)**
+🔗 **[View Live → https://YOUR-USERNAME.github.io/aria-chatbot](https://madhurimauppathil-pixel.github.io/aria-chatbot)**
 
 ---
 
