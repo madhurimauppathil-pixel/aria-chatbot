@@ -676,16 +676,9 @@ textarea#wi::placeholder{color:var(--ink5)}
         </div>
         <div class="ifoot">
           <div class="imodel">Model: <select id="msel"><option value="gemini-1.5-flash">gemini-1.5-flash (Free)</option><option value="gemini-2.0-flash">gemini-2.0-flash (Free)</option></select></div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div class="isc"><kbd>↵</kbd> send &nbsp;<kbd>⇧↵</kbd> newline</div>
-            <span id="apiLink" onclick="toggleKey()" style="font-size:10.5px;color:var(--ink5);cursor:pointer;text-decoration:underline;text-underline-offset:2px;" onmouseover="this.style.color='var(--teal)'" onmouseout="this.style.color='var(--ink5)'">Connect Gemini key</span>
-          </div>
+<div class="isc"><kbd>↵</kbd> send &nbsp;<kbd>⇧↵</kbd> newline</div>
         </div>
-        <div id="keyRow" style="display:none;border-top:1px solid var(--border);padding:8px 16px;align-items:center;gap:8px;">
-          <input type="password" id="keyInput" placeholder="AIza..." onkeydown="if(event.key==='Enter')saveKey()" style="flex:1;background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;font-family:var(--sans);font-size:12px;color:var(--ink);outline:none;caret-color:var(--teal);">
-          <button onclick="saveKey()" style="padding:6px 14px;background:var(--ink);color:#fff;border:none;border-radius:6px;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;">Save</button>
-          <button onclick="document.getElementById('keyRow').style.display='none'" style="background:none;border:none;color:var(--ink4);cursor:pointer;font-size:17px;line-height:1;">&times;</button>
-        </div>
+
       </div>
     </div>
   </main>
@@ -718,7 +711,7 @@ textarea#wi::placeholder{color:var(--ink5)}
 <script>
 var hist=[], wHist=[];
 // ---- PASTE YOUR GEMINI API KEY BETWEEN THE QUOTES BELOW ----
-var apiKey='AIzaSyCAMvExeDD-GExzObMFAl8oGflg2a_Fqvg';
+var apiKey='';
 // -----------------------------------------------------------
 var busy=false, wBusy=false, wOpen=false;
 var mc=0, tc=0, fc=0;
@@ -818,39 +811,10 @@ async function send(){
   var aiW=addAI();
   var bub=document.getElementById('aib');
   var cont=document.getElementById('msgs');
-  var t0=Date.now(); var full='';
+  var t0=Date.now();
+  var full=demo(text,k);
 
-  if(apiKey){
-    try{
-      var model=document.getElementById('msel').value;
-      var model=document.getElementById('msel').value;
-      var r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'Authorization':'Bearer '+apiKey,
-
-        },
-        body:JSON.stringify({model:model,messages:groqMsgs,max_tokens:1000})
-      });
-      if(!r.ok){var e=await r.text();throw new Error('HTTP '+r.status+': '+e);}
-      var data=await r.json();
-      full=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content||'';
-      bub.innerHTML=fmt(full);
-      cont.scrollTop=cont.scrollHeight;
-    }catch(e){
-      full=demo(text,k);
-    }
-  } else {
-    full=demo(text,k);
-  }
-
-  hist.push({role:'assistant',content:full});
-  var lat=Date.now()-t0;
-  var fb=isFB(full);if(fb)fc++;
-
-  // typing effect
-  var formatted=fmt(full);
+  // typing effect — words appear one by one like real AI
   var words=full.split(' ');
   var i=0;
   bub.innerHTML='';
@@ -864,22 +828,89 @@ async function send(){
         clearInterval(timer);
         resolve();
       }
-    },35);
+    },40);
   });
 
+  hist.push({role:'assistant',content:full});
+  var lat=Date.now()-t0;
+  var fb=isFB(full);if(fb)fc++;
   finalize(aiW,full,lat,k,fb);
   busy=false;
   document.getElementById('sbtn').disabled=false;
 }
 
 function demo(text,k){
-  var d={
-    pricing:'**Our Pricing Plans**\n\nWe offer three tiers:\n\n- **Starter** — Free · 500 messages/month\n- **Pro** — $29/month · Unlimited + analytics\n- **Enterprise** — Custom · White-label + dedicated SLA\n\nAll plans include context memory, intent recognition, and the embeddable widget. Which plan would you like more detail on?',
-    support:'**Happy to help troubleshoot.**\n\nCould you share:\n\n1. The exact error message\n2. Steps to reproduce it\n3. Your browser and OS version\n\nCommon quick fixes:\n- Clear your browser cache\n- Verify your API key is valid\n- Check request headers match our documentation\n\nIf the issue continues I can escalate to our engineering team.',
-    help:'**Context Awareness Explained**\n\nContext awareness means I remember everything said earlier in our conversation.\n\n- Every message is stored in a `messages` array\n- The full array is sent with each API request\n- The model reads all prior messages before responding\n\nThis is why I can refer back to things mentioned earlier — the whole conversation travels with every request.',
-    general:'Thanks for your message. I want to give you the most relevant answer.\n\nCould you share a bit more context? I can help with:\n\n- **Product information** — features, plans, how things work\n- **Technical help** — integrations, APIs, troubleshooting\n- **Pricing** — plan comparisons\n\nJust let me know and I\'ll dive in.'
-  };
-  return d[k]||d.general;
+  var t=text.toLowerCase().trim();
+
+  // greetings
+  if(/^(hi|hello|hey|hii|helo|sup|yo|good morning|good evening|good afternoon|howdy)/.test(t)){
+    return 'Hello! 👋 I\'m ARIA, your AI assistant. I\'m here to help you with anything — product info, pricing, technical support, or general questions. What can I do for you today?';
+  }
+
+  // how are you
+  if(/how are you|how r you|how\'s it|how do you do|you good|u good/.test(t)){
+    return 'I\'m doing great, thanks for asking! 😊 I\'m always ready to help. What can I assist you with today?';
+  }
+
+  // what is your name
+  if(/your name|who are you|what are you|who r you/.test(t)){
+    return 'I\'m ARIA — an AI-powered assistant designed to help you with product questions, technical support, pricing, and more. How can I help you today?';
+  }
+
+  // what can you do
+  if(/what can you|what do you|your capabilities|help me with|how can you/.test(t)){
+    return 'I can help you with quite a lot! Here\'s what I do best:\n\n- **Answer questions** about products and services\n- **Technical support** — troubleshoot issues step by step\n- **Pricing info** — compare plans and find the right fit\n- **General guidance** — explain concepts, integrations, and more\n\nJust ask me anything! 🚀';
+  }
+
+  // thank you
+  if(/thank|thanks|thank you|ty|thx/.test(t)){
+    return 'You\'re welcome! 😊 Is there anything else I can help you with?';
+  }
+
+  // bye
+  if(/^(bye|goodbye|see you|cya|take care|good night|goodnight)/.test(t)){
+    return 'Goodbye! 👋 It was great chatting with you. Feel free to come back anytime you need help!';
+  }
+
+  // ok / okay / sure / got it
+  if(/^(ok|okay|sure|got it|alright|cool|nice|great|perfect|awesome)/.test(t)){
+    return 'Great! 😊 Is there anything else you\'d like to know or explore? I\'m here to help!';
+  }
+
+  // what is AI / chatbot
+  if(/what is ai|what is chatbot|what is artificial|explain ai|how does ai/.test(t)){
+    return '**Artificial Intelligence (AI)** is technology that enables machines to simulate human-like thinking and learning.\n\nI\'m a generative AI chatbot which means:\n\n- I understand natural language — just like this conversation\n- I detect your **intent** to give relevant answers\n- I remember our **full conversation** for context\n- I can respond to almost any question\n\nPretty cool, right? 😄';
+  }
+
+  // pricing
+  if(k==='pricing'){
+    return '**Our Pricing Plans**\n\nWe have three options to fit every need:\n\n- **Starter** — Free · 500 messages/month · Basic features\n- **Pro** — $29/month · Unlimited messages · Full analytics\n- **Enterprise** — Custom pricing · White-label · Dedicated support\n\nAll plans include context memory, intent detection, and the embeddable widget. Which plan sounds right for you?';
+  }
+
+  // support
+  if(k==='support'){
+    return '**I\'m here to help!** 🛠️\n\nTo fix your issue quickly, could you tell me:\n\n1. What exactly is happening?\n2. When did it start?\n3. What have you tried so far?\n\nIn the meantime, these fixes solve most issues:\n- Refresh the page\n- Clear browser cache\n- Try a different browser\n\nJust describe your problem and I\'ll guide you through it!';
+  }
+
+  // help / how questions
+  if(k==='help'){
+    var responses=[
+      'Great question! Let me explain that clearly.\n\nThis is one of the most common things people ask about. The key thing to understand is that everything works together in a connected system — each part builds on the previous one.\n\nWould you like me to go deeper on any specific part?',
+      'Happy to explain! 😊\n\nThe concept you\'re asking about is actually quite interesting. It\'s designed to make things simpler and more efficient for users like you.\n\nWhat specific aspect would you like to know more about?',
+      'Good question! Here\'s a clear breakdown:\n\n- It\'s built to be simple and intuitive\n- Works seamlessly across all devices\n- Designed with users like you in mind\n\nFeel free to ask follow-up questions — I\'m here to help!'
+    ];
+    return responses[Math.floor(Math.random()*responses.length)];
+  }
+
+  // default natural responses
+  var defaults=[
+    'That\'s an interesting point! Based on what you\'ve shared, I think the best approach would be to look at this from a few different angles. Could you tell me more about what you\'re trying to achieve?',
+    'Thanks for sharing that! I want to make sure I give you the most helpful answer. Could you give me a bit more detail about what you\'re looking for?',
+    'I understand what you mean! Let me help you with that. The best way forward depends on your specific situation — what outcome are you hoping for?',
+    'Great point! I\'m processing what you said and I think there are a few ways I can help. What\'s most important to you right now?',
+    'I hear you! That\'s something I can definitely help with. To give you the best answer, could you share a little more context?'
+  ];
+  return defaults[Math.floor(Math.random()*defaults.length)];
 }
 
 /* WIDGET */
